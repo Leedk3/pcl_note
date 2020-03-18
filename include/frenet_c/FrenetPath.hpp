@@ -5,6 +5,7 @@
 #include <vector>
 #include <tuple>
 #include <cmath>
+#include <algorithm>
 #include "opencv2/opencv.hpp"
 #include "QuarticPolynomial.hpp"
 #include "QuinticPolynomial.hpp"
@@ -193,8 +194,45 @@ bool check_collision(FrenetPath _fp, vector<vector<double>> _ob) {
     return collision_flg;
 }
 
-vector<FrenetPath> check_paths(vector<FrenetPath> _fplist, vector<vector<double>> _ob) {
 
+vector<FrenetPath> check_paths(vector<FrenetPath> _fplist, vector<vector<double>> _ob) {
+    vector<int> ok_ind;
+    vector<FrenetPath> return_fp;
+
+    for(int i = 0; i < int(_fplist.size()); i++) {
+        if(std::any_of(_fplist[i].s_d.begin(), _fplist[i].s_d.end(), [](double v){return v > MAX_SPEED; }))
+            continue;
+        else if(std::any_of(_fplist[i].s_dd.begin(), _fplist[i].s_dd.end(), [](double a){return abs(a) > MAX_ACCEL; }))
+            continue;
+        else if(std::any_of(_fplist[i].c.begin(), _fplist[i].c.end(), [](double c){return abs(c) > MAX_CURVATURE; }))\
+            continue;
+        else if(check_collision(_fplist[i], _ob))
+            continue;
+        
+        ok_ind.push_back(i);
+        return_fp.push_back(_fplist[i]);
+    }
+
+    return return_fp;
+}
+
+FrenetPath frenet_optimal_planning(Spline2D _csp, double _s0, double _c_speed, double _c_d, double _c_d_d, double _c_d_dd, vector<vector<double>> _ob) {
+    auto fplist = calc_frenet_paths(_c_speed, _c_d, _c_d_d, _c_d_dd, _s0);
+    fplist = calc_global_paths(fplist, _csp);
+    fplist = check_paths(fplist, _ob);
+
+    FrenetPath best_path;
+
+    // find minimum cost path
+    double min_cost = 1000000.0;
+    for(int i = 0; i < int(fplist.size()); i++) {
+        if(min_cost >= fplist[i].cf) {
+            min_cost = fplist[i].cf;
+            best_path = fplist[i];
+        }
+    }
+
+    return best_path;
 }
 
 tuple<vector<double>,vector<double>,vector<double>,vector<double>,Spline2D> generate_target_course(vector<double> _x, vector<double> _y) {
