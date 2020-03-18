@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-
-<launch>
-	<!--node pkg="load_waypoint" type="load_waypoint_node" name="load_waypoint_node" output="screen">
-		<param name="/import_file" value="/waypoint_files/utm_points.txt" type="string" />
-	</node-->
-
-	<node pkg="frenet_c" type="frenet_c_node" name="frenet_c_node" output="screen"></node>		
-</launch>
