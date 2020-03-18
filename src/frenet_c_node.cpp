@@ -15,8 +15,8 @@ int main(int argc, char** argv)
     //test input
     std::vector <double> x_vec;
     std::vector <double> y_vec;
-    Spline spline(n, x_vec, y_vec);
-    Spline2D spline_2d(n, x_vec, y_vec);
+    Spline spline(x_vec, y_vec);
+    Spline2D spline_2d(x_vec, y_vec);
     while(ros::ok()){
 
         // path_follower.main_seqeunce();

@@ -3,9 +3,12 @@
 
 #include <iostream>
 #include <vector>
+#include <tuple>
+#include <cmath>
 #include "opencv2/opencv.hpp"
 #include "QuarticPolynomial.hpp"
 #include "QuinticPolynomial.hpp"
+#include "cubic_spliner_2D.hpp"
 
 using namespace cv;
 using namespace std;
@@ -30,6 +33,9 @@ using namespace std;
 #define K_D 1.0
 #define K_LAT 1.0
 #define K_LON 1.0
+
+// math
+#define PI 3.1415926535897
 
 class FrenetPath 
 {
@@ -122,10 +128,94 @@ vector<FrenetPath> calc_frenet_paths(double _c_speed, double _c_d, double _c_d_d
     return frenet_paths;
 }
 
-// // vector<FrenetPath> calc_global_paths(vector<FrenetPath> _fplist, ) {
+vector<FrenetPath> calc_global_paths(vector<FrenetPath> _fplist, Spline2D _csp) {
+    vector<FrenetPath> return_fplist;
+    return_fplist = _fplist;
 
-// // }
+    for(int fp_idx = 0; fp_idx < int(return_fplist.size()); fp_idx++) {
 
+        // calc global positions
+        for(int i = 0; i < int(return_fplist[fp_idx].s.size()); i++){
+            auto p_rxry = _csp.calc_position(return_fplist[fp_idx].s[i]);
+            // if ix is None: --> Not implemeted part
+            //     break
+
+            auto i_ryaw = _csp.calc_yaw(return_fplist[fp_idx].s[i]);
+            double di = return_fplist[fp_idx].d[i];
+
+            double fx = p_rxry.first + di * cos(i_ryaw + PI / 2.0);
+            double fy = p_rxry.second + di * sin(i_ryaw + PI / 2.0);
+
+            return_fplist[fp_idx].x.push_back(fx);
+            return_fplist[fp_idx].y.push_back(fy);
+        }
+
+        // calc yaw and ds
+        for(int i = 0; i < int(return_fplist[fp_idx].x.size()-1); i++) {
+            double dx = return_fplist[fp_idx].x[i+1] - return_fplist[fp_idx].x[i];
+            double dy = return_fplist[fp_idx].y[i+1] - return_fplist[fp_idx].y[i];
+            
+            return_fplist[fp_idx].yaw.push_back(atan2(dy,dx));
+            return_fplist[fp_idx].ds.push_back(sqrt(dx*dx + dy*dy));
+        }
+        return_fplist[fp_idx].yaw.push_back(return_fplist[fp_idx].yaw.back());
+        return_fplist[fp_idx].ds.push_back(return_fplist[fp_idx].ds.back());
+
+        // calc curvature
+        for(int i = 0; i < int(return_fplist[fp_idx].yaw.size()-1); i++) {
+            return_fplist[fp_idx].c.push_back((return_fplist[fp_idx].yaw[i+1] - return_fplist[fp_idx].yaw[i]) / return_fplist[fp_idx].ds[i]);
+        }
+    }
+    return return_fplist;
+}
+
+// ob init example : 
+// vector<vector<int> > ob{ { 1, 2 }, 
+//                                { 4, 5, 6 }, 
+//                                { 7, 8, 9, 10 } }; 
+
+bool check_collision(FrenetPath _fp, vector<vector<double>> _ob) {
+
+    bool collision_flg = false;
+
+    for(int i = 0; i < int(_ob.size()); i++) {
+        for(int j = 0; j < int(_fp.x.size()); j++) {
+            double d = pow(_fp.x[j] - _ob[i][0],2) + pow(_fp.y[j] - _ob[i][1],2);
+            if(d < pow(ROBOT_RADIUS,2)) {
+                collision_flg = true;
+                i = int(_ob.size());
+                j = int(_fp.x.size());
+                break;
+            }
+                
+        }
+    }
+    return collision_flg;
+}
+
+vector<FrenetPath> check_paths(vector<FrenetPath> _fplist, vector<vector<double>> _ob) {
+
+}
+
+tuple<vector<double>,vector<double>,vector<double>,vector<double>,Spline2D> generate_target_course(vector<double> _x, vector<double> _y) {
+    Spline2D csp(_x,_y);
+
+    vector<double> rx,ry,ryaw,rk;
+    for(double i_s = 0.0; i_s < csp.s.back();) {   
+        auto p_rxry = csp.calc_position(i_s);
+        auto i_ryaw = csp.calc_yaw(i_s);
+        auto i_rk = csp.calc_curvature(i_s);
+
+        rx.push_back(p_rxry.first);
+        ry.push_back(p_rxry.second);
+        ryaw.push_back(i_ryaw);
+        rk.push_back(i_rk);
+
+        i_s += 0.1;
+    }
+
+    return std::make_tuple(rx, ry, ryaw, rk, csp);
+}
 
 
 

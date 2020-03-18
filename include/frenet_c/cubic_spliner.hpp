@@ -1,3 +1,6 @@
+#ifndef Spline_H
+#define Spline_H
+
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <fstream>
@@ -36,7 +39,7 @@ using namespace std;
 class Spline
 {
     public:
-        Spline(ros::NodeHandle& _n, std::vector<double> _x, std::vector<double> _y);        
+        Spline(std::vector<double> _x, std::vector<double> _y);        
         ~Spline();
         double calc(double _t);
         double calcd(double _t);
@@ -55,7 +58,7 @@ class Spline
         ros::NodeHandle nh;
 };
 
-Spline::Spline(ros::NodeHandle& _n, std::vector<double> _x, std::vector<double> _y) 
+Spline::Spline(std::vector<double> _x, std::vector<double> _y) 
 {
     ROS_DEBUG("Object of Spline Class was created");
 
@@ -185,3 +188,4 @@ Mat Spline::__calc_B(std::vector<double> h){
     return B;
 }
 
+#endif
