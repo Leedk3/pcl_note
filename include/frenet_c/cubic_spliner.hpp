@@ -77,6 +77,26 @@ Spline::Spline(ros::NodeHandle& _n, std::vector<double> _x, std::vector<double> 
     a.clear();
     this->a.assign(y.begin(), y.end());
 
+    Mat A = __calc_A(h);
+    Mat B = __calc_B(h);
+    // this->c = A.inv() * B;
+    Mat C = A.inv() * B;
+    if (C.isContinuous())
+        C.col(0).copyTo(this->c);
+
+    vector<double>::iterator iter;
+    int i = 0;
+    double d_i = 0;
+    double b_i = 0;
+    for (iter=_x.begin();iter < _x.end() - 1; iter++, i++) {
+        d_i = (this->c.at(i+1) - this->c.at(i)) / (3.0*h.at(i));
+        b_i = (this->a.at(i+1) - this->a.at(i)) / h.at(i) - h.at(i) * (this->c.at(i+1) + 2.0 * this->c.at(i)) / 3;
+        this->d.push_back(d_i);
+        this->b.push_back(b_i);
+    }
+
+
+
 };
 
 Spline::~Spline() 
