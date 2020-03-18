@@ -3,7 +3,7 @@
 #include "frenet_c/QuarticPolynomial.hpp"
 #include "frenet_c/FrenetPath.hpp"
 #include "frenet_c/cubic_spliner.hpp"
-
+#include "frenet_c/cubic_spliner_2D.hpp"
 
 int main(int argc, char** argv)
 {
@@ -16,6 +16,7 @@ int main(int argc, char** argv)
     std::vector <double> x_vec;
     std::vector <double> y_vec;
     Spline spline(n, x_vec, y_vec);
+    Spline2D spline_2d(n, x_vec, y_vec);
     while(ros::ok()){
 
         // path_follower.main_seqeunce();
