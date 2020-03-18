@@ -53,10 +53,6 @@ class Spline
     private:
         // initialize variables
         ros::NodeHandle nh;
-        ros::Subscriber wpt_samples_sub;
-        ros::Subscriber robot_pose_sub;
-        ros::Publisher fitting_local_path_pub;
-        // geometry_msgs::PoseArray wpt_poses;
 };
 
 Spline::Spline(ros::NodeHandle& _n, std::vector<double> _x, std::vector<double> _y) 
@@ -94,8 +90,6 @@ Spline::Spline(ros::NodeHandle& _n, std::vector<double> _x, std::vector<double> 
         this->d.push_back(d_i);
         this->b.push_back(b_i);
     }
-
-
 
 };
 
@@ -190,7 +184,4 @@ Mat Spline::__calc_B(std::vector<double> h){
     }
     return B;
 }
-
-//     Mat <double> A(2,2);    // row,col
-//     Mat <double> b(2,1);    // row,col
 
