@@ -11,8 +11,6 @@
 #include <algorithm>
 #include <numeric>
 
-// #include <opencv/cv.h>
-
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -47,14 +45,22 @@ class Spline2D
 Spline2D::Spline2D(std::vector<double> _x, std::vector<double> _y) 
 {
     ROS_DEBUG("Object of Spline2D Class was created");
-    s.clear();
-    ds.clear();
-    x.clear();
-    y.clear();
+    this->s.clear();
+    this->ds.clear();
+    this->x.clear();
+    this->y.clear();
 
     this->s = Spline2D::__calc_s(_x, _y);
     this->x.assign(_x.begin(), _x.end());
     this->y.assign(_y.begin(), _y.end());
+
+    /* debug */
+    // vector <double>::iterator iter3;
+    // for (iter3=this->s.begin(); iter3 != this->s.end(); iter3++){
+    //     cout << "s" << *iter3 << endl;
+    // }
+    // 
+
 }
 
 Spline2D::~Spline2D() 
@@ -64,25 +70,23 @@ Spline2D::~Spline2D()
 }
 
 vector<double> Spline2D::__calc_s(std::vector<double> _x, std::vector<double> _y){
-    vector<double> dx, dy, s;
+    vector<double> dx(_x.size());
+    vector<double> dy(_y.size());
+    vector<double> s;
     vector<double>::iterator iter;
     int i = 0;
     double ds_i, s_i;
-    
-    dx.clear();
-    dy.clear();
-    std::adjacent_difference(_x.begin(), _x.end(), dx.begin());
-    std::adjacent_difference(_x.begin(), _x.end(), dy.begin());
 
-    for (iter=_x.begin();iter < _x.end() - 1; iter++, i++) {
+    std::adjacent_difference(_x.begin(), _x.end(), dx.begin() );
+    std::adjacent_difference(_y.begin(), _y.end(), dy.begin() );
+    dx.erase(dx.begin());
+    dy.erase(dy.begin());
+
+    s.push_back(0);
+    for (iter=dx.begin();iter < dx.end(); iter++, i++) {
         ds_i = hypot(dx.at(i), dy.at(i));
         this->ds.push_back(ds_i);
-        if (i == 0){
-            s_i = 0;
-        }
-        else {
-            s_i = s_i + ds_i;
-        }
+        s_i = s_i + ds_i;        
         s.push_back(s_i);
     }
     return s;
@@ -130,13 +134,15 @@ double Spline2D::calc_yaw(double _s){
     double yaw;
     dx = sx->calcd(_s);
     dy = sy->calcd(_s);
-    yaw = atan2(dy, dx);
 
+    yaw = atan2(dy, dx);
     delete sx;
     delete sy;
 
     return yaw;
 }
+
+
 
 
 #endif
