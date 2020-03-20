@@ -70,7 +70,11 @@ vector<FrenetPath> calc_frenet_paths(double _c_speed, double _c_d, double _c_d_d
     vector<FrenetPath> frenet_paths;
 
     for(double di = -MAX_ROAD_WIDTH; di < MAX_ROAD_WIDTH;) {
+
+        // cout << di << endl;
         for(double Ti = MIN_T; Ti < MAX_T; ) {
+
+            // cout << Ti << endl;
             FrenetPath fp;
 
             QuinticPolynomial lat_qp(_c_d, _c_d_d, _c_d_dd, di, 0.0, 0.0, Ti);
@@ -87,7 +91,17 @@ vector<FrenetPath> calc_frenet_paths(double _c_speed, double _c_d, double _c_d_d
                 fp.d_ddd.push_back(lat_qp.calc_third_derivative(i));
             }
 
-            for(double tv = TARGET_SPEED-D_T_S*N_S_SAMPLE; tv < TARGET_SPEED+D_T_S*N_S_SAMPLE;) {
+            cout  << "---------------------------PRINT D ---------------------------" << endl;
+            for(auto i : fp.t) {
+                cout << fp.d[i] << " " << fp.d_d[i] << " " << fp.d_dd[i] << " " << fp.d_ddd[i] << " " << endl;
+            }
+
+            
+
+            for(double tv = TARGET_SPEED-D_T_S*N_S_SAMPLE; tv <= TARGET_SPEED+D_T_S*N_S_SAMPLE;) {
+
+                // cout << tv << endl;
+
                 FrenetPath tfp;
                 tfp = fp;
                 QuarticPolynomial lon_qp(_s0, _c_speed, 0.0, tv, 0.0, Ti);
@@ -98,6 +112,12 @@ vector<FrenetPath> calc_frenet_paths(double _c_speed, double _c_d, double _c_d_d
                     tfp.s_dd.push_back(lon_qp.calc_second_derivative(i));
                     tfp.s_ddd.push_back(lon_qp.calc_third_derivative(i));
                 }
+
+                // cout  << "---------------------------PRINT S ---------------------------" << endl;
+
+                // for(auto i : tfp.s) {
+                //     cout << tfp.s[i] << " " << tfp.s_d[i] << " " << tfp.s_dd[i] << " " << tfp.s_ddd[i] << " "  << endl;
+                // }
 
                 double Jp = 0;
                 double Js = 0;
@@ -218,6 +238,9 @@ vector<FrenetPath> check_paths(vector<FrenetPath> _fplist, vector<vector<double>
 
 FrenetPath frenet_optimal_planning(Spline2D _csp, double _s0, double _c_speed, double _c_d, double _c_d_d, double _c_d_dd, vector<vector<double>> _ob) {
     auto fplist = calc_frenet_paths(_c_speed, _c_d, _c_d_d, _c_d_dd, _s0);
+
+    cout << fplist.size() << endl;
+
     fplist = calc_global_paths(fplist, _csp);
     fplist = check_paths(fplist, _ob);
 

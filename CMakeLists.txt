@@ -5,7 +5,8 @@ project(frenet_c)
 #set(CMAKE_CXX_STANDARD 11)
 #set(CMAKE_C_STANDARD 11)
 
-add_definitions("-std=c++0x -Wall -Werror")
+#add_definitions("-std=c++0x -Wall -Werror")
+add_definitions("-std=c++1z")
 
 
 find_package(catkin REQUIRED COMPONENTS

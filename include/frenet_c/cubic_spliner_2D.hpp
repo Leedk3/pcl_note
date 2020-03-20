@@ -27,6 +27,7 @@ using namespace std;
 class Spline2D
 {
     public:
+        Spline2D(){};
         Spline2D(std::vector<double> _x, std::vector<double> _y);        
         ~Spline2D();
         vector<double> __calc_s(std::vector<double> _x, std::vector<double> _y);
@@ -65,7 +66,7 @@ Spline2D::Spline2D(std::vector<double> _x, std::vector<double> _y)
 
 Spline2D::~Spline2D() 
 {   
-    ROS_INFO("Spline2D Class destructor.");
+    // ROS_INFO("Spline2D Class destructor.");
 
 }
 
