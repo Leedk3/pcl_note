@@ -27,12 +27,19 @@ int main(int argc, char** argv)
     // cout << "------------------------ result : ------------------------" << endl;
     // cout << result_yaw << "  " << result_curv <<" " << result_pair.first << " " << result_pair.second << endl;
 
-    QuarticPolynomial test_obj(1,2,3,4,5,6);
+    // QuinticPolynomial test_obj(1,2,3,4,5,6,7);
+    // double four = test_obj.calc_point(4);
+    // double five = test_obj.calc_first_derivative(5);
+    // double six = test_obj.calc_second_derivative(6);
+    // double seven = test_obj.calc_third_derivative(7);
 
-    // cout << test_obj.calc_point(1) <<
-    // test_obj.calc_first_derivative(2) <<
-    // test_obj.calc_second_derivative(3) <<
-    // test_obj.calc_third_derivative(4) << endl;
+    // cout << four << endl;
+    // cout << five << endl;
+    // cout << six << endl;
+    // cout << seven << endl;
+
+
+
 
     vector<double> wx,wy;
     wx.push_back(0.0);wx.push_back(10.0);wx.push_back(20.5);wx.push_back(35.0);wx.push_back(70.5);
@@ -60,7 +67,7 @@ int main(int argc, char** argv)
 
     double area = 20.0;
 
-    for(int sim = 0; sim < 1; sim++) {
+    for(int sim = 0; sim < 3; sim++) {
         auto path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, ob);
 
         s0 = path.s[1];

@@ -79,24 +79,22 @@ vector<FrenetPath> calc_frenet_paths(double _c_speed, double _c_d, double _c_d_d
 
             QuinticPolynomial lat_qp(_c_d, _c_d_d, _c_d_dd, di, 0.0, 0.0, Ti);
             
-            for(double t = 0.0; t <Ti;) {
+            double t;
+            for(t = 0.0; t <=Ti;) {
                 fp.t.push_back(t);
                 t += DT;
             }
+            fp.t.push_back(t);
 
             for(auto i : fp.t) {            // https://www.geeksforgeeks.org/range-based-loop-c/
+
+                // cout << i << endl;
                 fp.d.push_back(lat_qp.calc_point(i));
                 fp.d_d.push_back(lat_qp.calc_first_derivative(i));
                 fp.d_dd.push_back(lat_qp.calc_second_derivative(i));
                 fp.d_ddd.push_back(lat_qp.calc_third_derivative(i));
             }
-
-            cout  << "---------------------------PRINT D ---------------------------" << endl;
-            for(auto i : fp.t) {
-                cout << fp.d[i] << " " << fp.d_d[i] << " " << fp.d_dd[i] << " " << fp.d_ddd[i] << " " << endl;
-            }
-
-            
+           
 
             for(double tv = TARGET_SPEED-D_T_S*N_S_SAMPLE; tv <= TARGET_SPEED+D_T_S*N_S_SAMPLE;) {
 
@@ -107,36 +105,48 @@ vector<FrenetPath> calc_frenet_paths(double _c_speed, double _c_d, double _c_d_d
                 QuarticPolynomial lon_qp(_s0, _c_speed, 0.0, tv, 0.0, Ti);
 
                 for(auto i : fp.t) {            // https://www.geeksforgeeks.org/range-based-loop-c/
-                    tfp.s.push_back(lon_qp.calc_point(i));
-                    tfp.s_d.push_back(lon_qp.calc_first_derivative(i));
-                    tfp.s_dd.push_back(lon_qp.calc_second_derivative(i));
-                    tfp.s_ddd.push_back(lon_qp.calc_third_derivative(i));
+                    // tfp.s.push_back(lon_qp.calc_point(i));
+                    // tfp.s_d.push_back(lon_qp.calc_first_derivative(i));
+                    // tfp.s_dd.push_back(lon_qp.calc_second_derivative(i));
+                    // tfp.s_ddd.push_back(lon_qp.calc_third_derivative(i));
+                    fp.s.push_back(lon_qp.calc_point(i));
+                    fp.s_d.push_back(lon_qp.calc_first_derivative(i));
+                    fp.s_dd.push_back(lon_qp.calc_second_derivative(i));
+                    fp.s_ddd.push_back(lon_qp.calc_third_derivative(i));
                 }
-
-                // cout  << "---------------------------PRINT S ---------------------------" << endl;
-
-                // for(auto i : tfp.s) {
-                //     cout << tfp.s[i] << " " << tfp.s_d[i] << " " << tfp.s_dd[i] << " " << tfp.s_ddd[i] << " "  << endl;
-                // }
 
                 double Jp = 0;
                 double Js = 0;
 
-                for(auto p : tfp.d_ddd) {
-                    Jp += pow(tfp.d_ddd[p],2);
+                // for(auto p : tfp.d_ddd) {
+                //     Jp += pow(tfp.d_ddd[p],2);
+                // }
+                for(auto p : fp.d_ddd) {
+                    Jp += pow(fp.d_ddd[p],2);
                 }
 
-                for(auto s : tfp.s_ddd) {
-                    Js += pow(tfp.s_ddd[s],2);
+                // for(auto s : tfp.s_ddd) {
+                //     Js += pow(tfp.s_ddd[s],2);
+                // }
+                for(auto s : fp.s_ddd) {
+                    Js += pow(fp.s_ddd[s],2);
                 }
 
-                double ds = pow(TARGET_SPEED-tfp.s_d[-1],2);
+                // cout << Jp << " " << Js << endl;
 
-                tfp.cd = K_J * Jp + K_T * Ti + K_D * pow(tfp.d[-1],2);
-                tfp.cv = K_J * Js + K_T * Ti + K_D * ds;
-                tfp.cf = K_LAT * tfp.cd + K_LON * tfp.cv;
+                // double ds = pow(TARGET_SPEED-tfp.s_d[-1],2);
+                double ds = pow(TARGET_SPEED-fp.s_d[-1],2);
 
-                frenet_paths.push_back(tfp);
+                // tfp.cd = K_J * Jp + K_T * Ti + K_D * pow(tfp.d[-1],2);
+                // tfp.cv = K_J * Js + K_T * Ti + K_D * ds;
+                // tfp.cf = K_LAT * tfp.cd + K_LON * tfp.cv;
+
+                fp.cd = K_J * Jp + K_T * Ti + K_D * pow(fp.d[-1],2);
+                fp.cv = K_J * Js + K_T * Ti + K_D * ds;
+                fp.cf = K_LAT * fp.cd + K_LON * fp.cv;
+
+                // frenet_paths.push_back(tfp);
+                frenet_paths.push_back(fp);
 
                 tv += D_T_S;
             }

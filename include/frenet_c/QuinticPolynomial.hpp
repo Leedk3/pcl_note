@@ -29,7 +29,7 @@ QuinticPolynomial::QuinticPolynomial(double _xs,double _vxs, double _axs, double
     this->b = Mat(3,1,CV_64F,Scalar(0));    // row,col
 
     this->a0 = _xs;
-    this->a1 = _vxe;
+    this->a1 = _vxs;
     this->a2 = _axs / 2.0;
 
     this->A.at<double>(0,0) = pow(_time,3);
@@ -51,6 +51,8 @@ QuinticPolynomial::QuinticPolynomial(double _xs,double _vxs, double _axs, double
     this->a3 = x.at<double>(0,0);
     this->a4 = x.at<double>(0,1);
     this->a5 = x.at<double>(0,2);
+
+    // cout << a0 << " " << a1 << " " << a2 << " "<<a3 << " "<<a4 << " " <<a5 << " " << endl;
 }
 
 
