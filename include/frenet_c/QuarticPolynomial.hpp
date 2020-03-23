@@ -44,12 +44,6 @@ QuarticPolynomial::QuarticPolynomial(double _xs,double _vxs,double _axs,double _
 
     this->a3 = x.at<double>(0,0);
     this->a4 = x.at<double>(1,0);
-
-    // std::cout << A << std::endl;
-    // std::cout << b << std::endl;
-    // std::cout << x << std::endl;
-    // cout << a0 << a1 << a2 << a3 << a4 << endl;
-    // std::cout << "end" << std::endl;
 }
 
 double QuarticPolynomial::calc_point(double _t) {

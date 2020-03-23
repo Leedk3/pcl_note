@@ -85,27 +85,6 @@ Spline::Spline(std::vector<double> _x, std::vector<double> _y)
         this->b.push_back(b_i);
     }
 
-    /* debug set */
-    // cout << "nx :"<< nx << endl;
-    // vector<double>::iterator iter_debug;
-    // for (iter_debug = h.begin(); iter_debug != h.end(); iter_debug++){
-    //     cout << "h :" <<*iter_debug << endl;
-    // }
-    // cout << "------------" <<endl;
-    // /* -----------------------------*/
-    // vector<double>::iterator iter_debug1;
-    // for (iter_debug1 = this->a.begin(); iter_debug1 != this->a.end(); iter_debug1++){
-    //     cout << "a :" <<*iter_debug1 << endl;
-    // }
-    // cout << "------------" <<endl;
-    // /* -----------------------------*/
-    // cout<< "Mat A:" <<endl;
-    // cout << A << endl;
-    // cout<< "Mat B:" <<endl;
-    // cout << B << endl;
-    // cout<< "Mat C:" <<endl;
-    // cout << C << endl;
-
 };
 
 Spline::~Spline() 
@@ -127,18 +106,6 @@ double Spline::calc(double _t){
     result = this->a.at(found_index) + this->b.at(found_index) * dx + 
              this->c.at(found_index) * pow(dx,2) + this->d.at(found_index) * pow(dx,3);
 
-    /*debug */
-    // vector<double>::iterator iter;
-    // for (iter = this->x.begin(); iter != this->x.end(); iter++ ){
-    //     cout << *iter << endl;
-    // }
-    // cout << "calc--index: " <<found_index << endl;
-    // cout << "dx: " << dx << endl;
-    // cout << "a: " << this->a.at(found_index) << endl;
-    // cout << "b: " << this->b.at(found_index) << endl;
-    // cout << "c: " << this->c.at(found_index) << endl;
-    // cout << "d: " << this->d.at(found_index) << endl;
-
     return result;
 }
 
@@ -156,17 +123,6 @@ double Spline::calcd(double _t){
     dx = _t - this->x.at(found_index);
     result = this->b.at(found_index) + this->c.at(found_index)* dx *2 + this->d.at(found_index)* pow(dx,2) * 3;
 
-    /* debug */
-    // vector<double>::iterator iter;
-    // for (iter = this->x.begin(); iter != this->x.end(); iter++ ){
-    //     cout << *iter << endl;
-    // }
-    // cout << "calcd--index: " <<found_index << endl;
-    // cout << "dx: " << dx << endl;
-    // cout << "b: " << this->b.at(found_index) << endl;
-    // cout << "c: " << this->c.at(found_index) << endl;
-    // cout << "d: " << this->d.at(found_index) << endl;
-
     return result;
 }
 
@@ -183,16 +139,6 @@ double Spline::calcdd(double _t){
     dx = _t - this->x.at(found_index);
     result = this->c.at(found_index)* 2 + this->d.at(found_index)* dx * 6;
 
-    /* debug */
-    // vector<double>::iterator iter;
-    // for (iter = this->x.begin(); iter != this->x.end(); iter++ ){
-    //     cout << *iter << endl;
-    // }
-    // cout << "calcdd--index: " <<found_index << endl;
-    // cout << "dx: " << dx << endl;
-    // cout << "c: " << this->c.at(found_index) << endl;
-    // cout << "d: " << this->d.at(found_index) << endl;
-    
     return result;
 }
 

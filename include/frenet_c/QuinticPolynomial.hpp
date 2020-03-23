@@ -52,7 +52,6 @@ QuinticPolynomial::QuinticPolynomial(double _xs,double _vxs, double _axs, double
     this->a4 = x.at<double>(0,1);
     this->a5 = x.at<double>(0,2);
 
-    // cout << a0 << " " << a1 << " " << a2 << " "<<a3 << " "<<a4 << " " <<a5 << " " << endl;
 }
 
 

@@ -21,8 +21,8 @@ using namespace std;
 #define MAX_ROAD_WIDTH 7.0        // maximum road width [m]
 #define D_ROAD_W 1.0              // road width sampling length [m]
 #define DT 0.2                    // time tick [s]
-#define MAX_T 5.0                 // max prediction time [m]
-#define MIN_T 4.0                 // min prediction time [m]
+#define MAX_T 5.1                 // max prediction time [m] ----------------> python code에서 floating point가 잘 못되서 +- 0.1을 해줌
+#define MIN_T 3.9                 // min prediction time [m] ----------------> python code에서 floating point가 잘 못되서 +- 0.1을 해줌
 #define TARGET_SPEED 30.0 / 3.6   // target speed [m/s]
 #define D_T_S 5.0 / 3.6           // target speed sampling length [m/s]
 #define N_S_SAMPLE 1              // sampling number of target speed
@@ -64,17 +64,13 @@ public:
     vector<double> c;
 };
 
-
-
 vector<FrenetPath> calc_frenet_paths(double _c_speed, double _c_d, double _c_d_d, double _c_d_dd, double _s0) {
     vector<FrenetPath> frenet_paths;
 
     for(double di = -MAX_ROAD_WIDTH; di < MAX_ROAD_WIDTH;) {
 
-        // cout << di << endl;
         for(double Ti = MIN_T; Ti < MAX_T; ) {
 
-            // cout << Ti << endl;
             FrenetPath fp;
 
             QuinticPolynomial lat_qp(_c_d, _c_d_d, _c_d_dd, di, 0.0, 0.0, Ti);
@@ -84,32 +80,32 @@ vector<FrenetPath> calc_frenet_paths(double _c_speed, double _c_d, double _c_d_d
                 fp.t.push_back(t);
                 t += DT;
             }
-            fp.t.push_back(t);
 
             for(auto i : fp.t) {            // https://www.geeksforgeeks.org/range-based-loop-c/
 
-                // cout << i << endl;
-                fp.d.push_back(lat_qp.calc_point(i));
+                fp.d.push_back(lat_qp.calc_point(double(i)));
                 fp.d_d.push_back(lat_qp.calc_first_derivative(i));
                 fp.d_dd.push_back(lat_qp.calc_second_derivative(i));
                 fp.d_ddd.push_back(lat_qp.calc_third_derivative(i));
             }
-           
 
             for(double tv = TARGET_SPEED-D_T_S*N_S_SAMPLE; tv <= TARGET_SPEED+D_T_S*N_S_SAMPLE;) {
-
-                // cout << tv << endl;
 
                 FrenetPath tfp;
                 tfp = fp;
                 QuarticPolynomial lon_qp(_s0, _c_speed, 0.0, tv, 0.0, Ti);
+
+                fp.s.clear();
+                fp.s_d.clear();
+                fp.s_dd.clear();
+                fp.s_ddd.clear();
 
                 for(auto i : fp.t) {            // https://www.geeksforgeeks.org/range-based-loop-c/
                     // tfp.s.push_back(lon_qp.calc_point(i));
                     // tfp.s_d.push_back(lon_qp.calc_first_derivative(i));
                     // tfp.s_dd.push_back(lon_qp.calc_second_derivative(i));
                     // tfp.s_ddd.push_back(lon_qp.calc_third_derivative(i));
-                    fp.s.push_back(lon_qp.calc_point(i));
+                    fp.s.push_back(lon_qp.calc_point(double(i)));
                     fp.s_d.push_back(lon_qp.calc_first_derivative(i));
                     fp.s_dd.push_back(lon_qp.calc_second_derivative(i));
                     fp.s_ddd.push_back(lon_qp.calc_third_derivative(i));
@@ -118,34 +114,20 @@ vector<FrenetPath> calc_frenet_paths(double _c_speed, double _c_d, double _c_d_d
                 double Jp = 0;
                 double Js = 0;
 
-                // for(auto p : tfp.d_ddd) {
-                //     Jp += pow(tfp.d_ddd[p],2);
-                // }
                 for(auto p : fp.d_ddd) {
-                    Jp += pow(fp.d_ddd[p],2);
+                    Jp += pow(p,2);
                 }
 
-                // for(auto s : tfp.s_ddd) {
-                //     Js += pow(tfp.s_ddd[s],2);
-                // }
                 for(auto s : fp.s_ddd) {
-                    Js += pow(fp.s_ddd[s],2);
+                    Js += pow(s,2);
                 }
 
-                // cout << Jp << " " << Js << endl;
+                double ds = pow(TARGET_SPEED-fp.s_d.back(),2);
 
-                // double ds = pow(TARGET_SPEED-tfp.s_d[-1],2);
-                double ds = pow(TARGET_SPEED-fp.s_d[-1],2);
-
-                // tfp.cd = K_J * Jp + K_T * Ti + K_D * pow(tfp.d[-1],2);
-                // tfp.cv = K_J * Js + K_T * Ti + K_D * ds;
-                // tfp.cf = K_LAT * tfp.cd + K_LON * tfp.cv;
-
-                fp.cd = K_J * Jp + K_T * Ti + K_D * pow(fp.d[-1],2);
+                fp.cd = K_J * Jp + K_T * Ti + K_D * pow(fp.d.back(),2);
                 fp.cv = K_J * Js + K_T * Ti + K_D * ds;
                 fp.cf = K_LAT * fp.cd + K_LON * fp.cv;
 
-                // frenet_paths.push_back(tfp);
                 frenet_paths.push_back(fp);
 
                 tv += D_T_S;
@@ -167,6 +149,7 @@ vector<FrenetPath> calc_global_paths(vector<FrenetPath> _fplist, Spline2D _csp) 
 
         // calc global positions
         for(int i = 0; i < int(return_fplist[fp_idx].s.size()); i++){
+            // cout << return_fplist[fp_idx].s.size() << endl;
             auto p_rxry = _csp.calc_position(return_fplist[fp_idx].s[i]);
             // if ix is None: --> Not implemeted part
             //     break
@@ -230,15 +213,18 @@ vector<FrenetPath> check_paths(vector<FrenetPath> _fplist, vector<vector<double>
     vector<FrenetPath> return_fp;
 
     for(int i = 0; i < int(_fplist.size()); i++) {
-        if(std::any_of(_fplist[i].s_d.begin(), _fplist[i].s_d.end(), [](double v){return v > MAX_SPEED; }))
+        if(std::any_of(_fplist[i].s_d.begin(), _fplist[i].s_d.end(), [](double v){return v > MAX_SPEED; })){
             continue;
-        else if(std::any_of(_fplist[i].s_dd.begin(), _fplist[i].s_dd.end(), [](double a){return abs(a) > MAX_ACCEL; }))
+        }
+        else if(std::any_of(_fplist[i].s_dd.begin(), _fplist[i].s_dd.end(), [](double a){return abs(a) > MAX_ACCEL; })){
             continue;
-        else if(std::any_of(_fplist[i].c.begin(), _fplist[i].c.end(), [](double c){return abs(c) > MAX_CURVATURE; }))\
+        }
+        else if(std::any_of(_fplist[i].c.begin(), _fplist[i].c.end(), [](double c){return abs(c) > MAX_CURVATURE; })){
             continue;
-        else if(check_collision(_fplist[i], _ob))
+        }
+        else if(check_collision(_fplist[i], _ob)){
             continue;
-        
+        } 
         ok_ind.push_back(i);
         return_fp.push_back(_fplist[i]);
     }
@@ -248,16 +234,13 @@ vector<FrenetPath> check_paths(vector<FrenetPath> _fplist, vector<vector<double>
 
 FrenetPath frenet_optimal_planning(Spline2D _csp, double _s0, double _c_speed, double _c_d, double _c_d_d, double _c_d_dd, vector<vector<double>> _ob) {
     auto fplist = calc_frenet_paths(_c_speed, _c_d, _c_d_d, _c_d_dd, _s0);
-
-    cout << fplist.size() << endl;
-
     fplist = calc_global_paths(fplist, _csp);
     fplist = check_paths(fplist, _ob);
 
     FrenetPath best_path;
 
     // find minimum cost path
-    double min_cost = 1000000.0;
+    double min_cost = 1000000000000000.0;
     for(int i = 0; i < int(fplist.size()); i++) {
         if(min_cost >= fplist[i].cf) {
             min_cost = fplist[i].cf;
