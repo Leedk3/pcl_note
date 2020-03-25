@@ -24,6 +24,7 @@
 using namespace cv;
 using namespace std;
 
+
 class Spline2D
 {
     public:
@@ -38,7 +39,8 @@ class Spline2D
     public:        
         // initialize variables
         vector <double> s, ds, x, y;
-
+        Spline sx;
+        Spline sy;
     private:
         ros::NodeHandle nh;
 };
@@ -54,6 +56,9 @@ Spline2D::Spline2D(std::vector<double> _x, std::vector<double> _y)
     this->s = Spline2D::__calc_s(_x, _y);
     this->x.assign(_x.begin(), _x.end());
     this->y.assign(_y.begin(), _y.end());
+
+    this->sx.init(this->s,_x);
+    this->sy.init(this->s,_y);
 
     /* debug */
     // vector <double>::iterator iter3;
@@ -93,57 +98,38 @@ vector<double> Spline2D::__calc_s(std::vector<double> _x, std::vector<double> _y
     return s;
 }
 
+
 std::pair< double, double> Spline2D::calc_position(double _s){
-    Spline* sx = new Spline(this->s, this->x);
-    Spline* sy = new Spline(this->s, this->y);
-    
     double x, y;
     
-    x = sx->calc(_s);
-    y = sy->calc(_s);
-    
-    delete sx;
-    delete sy;
+    x = this->sx.calc(_s);
+    y = this->sy.calc(_s);
 
     return std::make_pair(x,y);
 }
 
 double Spline2D::calc_curvature(double _s){
-    Spline* sx = new Spline(this->s, this->x);
-    Spline* sy = new Spline(this->s, this->y);
-
     double dx, ddx, dy, ddy;
     double k;
 
-    dx = sx->calcd(_s);
-    ddx = sx->calcdd(_s);
-    dy = sy->calcd(_s);
-    ddy = sy->calcdd(_s);
+    dx = this->sx.calcd(_s);
+    ddx = this->sx.calcdd(_s);
+    dy = this->sy.calcd(_s);
+    ddy = this->sy.calcdd(_s);
     k = (ddy * dx - ddx * dy) / pow((dx*dx + dy*dy),1.5);
-
-    delete sx;
-    delete sy;
 
     return k;
 }
 
 double Spline2D::calc_yaw(double _s){
-    Spline* sx = new Spline(this->s, this->x);
-    Spline* sy = new Spline(this->s, this->y);
-
     double dx, dy;
     double yaw;
-    dx = sx->calcd(_s);
-    dy = sy->calcd(_s);
+    dx = this->sx.calcd(_s);
+    dy = this->sy.calcd(_s);
 
     yaw = atan2(dy, dx);
-    delete sx;
-    delete sy;
 
     return yaw;
 }
-
-
-
 
 #endif

@@ -26,7 +26,7 @@ using namespace std;
 class Spline
 {
     public:
-        Spline(std::vector<double> _x, std::vector<double> _y);        
+        Spline() {};      
         ~Spline();
         double calc(double _t);
         double calcd(double _t);
@@ -34,7 +34,7 @@ class Spline
         int __search_index(double _x);
         Mat __calc_A(std::vector<double> h);
         Mat __calc_B(std::vector<double> h);
-
+        void init(std::vector<double> _x, std::vector<double> _y);
     public:        
         // initialize variables
         vector <double> x,y,a,b,c,d,w;
@@ -45,8 +45,7 @@ class Spline
         ros::NodeHandle nh;
 };
 
-Spline::Spline(std::vector<double> _x, std::vector<double> _y) 
-{
+void Spline::init(std::vector<double> _x, std::vector<double> _y) {
     ROS_DEBUG("Object of Spline Class was created");
 
     x.clear();
@@ -84,8 +83,7 @@ Spline::Spline(std::vector<double> _x, std::vector<double> _y)
         this->d.push_back(d_i);
         this->b.push_back(b_i);
     }
-
-};
+}
 
 Spline::~Spline() 
 {    
