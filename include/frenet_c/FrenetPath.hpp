@@ -20,13 +20,13 @@ using namespace cv;
 using namespace std;
 
 // Parameter
-#define MAX_SPEED 5.0 / 3.6      // maximum speed [m/s]
+#define MAX_SPEED 50.0 / 3.6      // maximum speed [m/s]
 #define MAX_ACCEL 2.0             // maximum acceleration [m/ss]
 #define MAX_CURVATURE 1.0         // maximum curvature [1/m]
-#define MAX_ROAD_WIDTH 5.0        // maximum road width [m]
-#define D_ROAD_W 1.0              // road width sampling length [m]
-#define DT 0.2                    // time tick [s]
-#define MAX_T 8.1                 // max prediction time [m] ----------------> python code에서 floating point가 잘 못되서 +- 0.1을 해줌
+#define MAX_ROAD_WIDTH 14.0        // maximum road width [m]
+#define D_ROAD_W 0.5              // road width sampling length [m]
+#define DT 0.1                    // time tick [s]
+#define MAX_T 6.1                 // max prediction time [m] ----------------> python code에서 floating point가 잘 못되서 +- 0.1을 해줌
 #define MIN_T 3.9                 // min prediction time [m] ----------------> python code에서 floating point가 잘 못되서 +- 0.1을 해줌
 #define TARGET_SPEED 10.0 / 3.6   // target speed [m/s]
 #define D_T_S 5.0 / 3.6           // target speed sampling length [m/s]
@@ -39,6 +39,8 @@ using namespace std;
 #define K_D 1.0
 #define K_LAT 1.0
 #define K_LON 1.0
+
+#define VISUALIZATION true
 
 // math
 #define PI 3.1415926535897
@@ -145,46 +147,14 @@ vector<FrenetPath> calc_frenet_paths(double _c_speed, double _c_d, double _c_d_d
 vector<FrenetPath> calc_global_paths(ros::NodeHandle& _n, vector<FrenetPath> _fplist, Spline2D _csp) {
     vector<FrenetPath> return_fplist;
     return_fplist = _fplist;
-    ros::Publisher position_markers_pub  = _n.advertise<visualization_msgs::MarkerArray>("/frenet_paths", 1);
-    // ros::Publisher position_marker_pub  = _n.advertise<visualization_msgs::Marker>("/frenet_single_path", 1);
-    visualization_msgs::MarkerArray markers;
-    markers.markers.clear();
-    std_msgs::ColorRGBA colors;
-    int count = 0;
+
     for(int fp_idx = 0; fp_idx < int(return_fplist.size()); fp_idx++) {
-        count++;
-        // calc global positions
-        visualization_msgs::Marker marker1;
-        marker1.header.frame_id = "map";
-        marker1.header.stamp = ros::Time();
-        marker1.id = count;
-        marker1.type = visualization_msgs::Marker::LINE_STRIP;
-        marker1.action = visualization_msgs::Marker::ADD;
-        marker1.pose.position.x = 0;
-        marker1.pose.position.y = 0;
-        marker1.pose.orientation.w = 1.0;
-        marker1.scale.x = 0.5;
-        marker1.scale.y = 0.5;
-        marker1.scale.z = 0.5;
-        marker1.color.a = 1.0; // Don't forget to set the alpha!
-        marker1.color.r = 0.0;
-        marker1.color.g = 1.0;
-        marker1.color.b = 0.0;
 
         for(int i = 0; i < int(return_fplist[fp_idx].s.size()); i++){
-            // cout << return_fplist[fp_idx].s.size() << endl;
             auto p_rxry = _csp.calc_position(return_fplist[fp_idx].s[i]);
             // if ix is None: --> Not implemeted part
             //     break
-                    // visualization_msgs::Marker marker1;
-            geometry_msgs::Point point_xy;
-            point_xy.x = p_rxry.first;
-            point_xy.y = p_rxry.second;
-            marker1.points.push_back(point_xy);
-            colors.g = 1;
-            colors.a = 1;
-        
-            marker1.colors.push_back(colors);
+
             auto i_ryaw = _csp.calc_yaw(return_fplist[fp_idx].s[i]);
             double di = return_fplist[fp_idx].d[i];
 
@@ -194,7 +164,6 @@ vector<FrenetPath> calc_global_paths(ros::NodeHandle& _n, vector<FrenetPath> _fp
             return_fplist[fp_idx].x.push_back(fx);
             return_fplist[fp_idx].y.push_back(fy);
         }
-        markers.markers.push_back(marker1);
         // calc yaw and ds
         for(int i = 0; i < int(return_fplist[fp_idx].x.size()-1); i++) {
             double dx = return_fplist[fp_idx].x[i+1] - return_fplist[fp_idx].x[i];
@@ -211,7 +180,6 @@ vector<FrenetPath> calc_global_paths(ros::NodeHandle& _n, vector<FrenetPath> _fp
             return_fplist[fp_idx].c.push_back((return_fplist[fp_idx].yaw[i+1] - return_fplist[fp_idx].yaw[i]) / return_fplist[fp_idx].ds[i]);
         }
     }
-    position_markers_pub.publish(markers);
 
     return return_fplist;
 }
@@ -265,12 +233,10 @@ vector<FrenetPath> check_paths(vector<FrenetPath> _fplist, vector<vector<double>
     return return_fp;
 }
 
-FrenetPath frenet_optimal_planning(ros::NodeHandle& _n, Spline2D _csp, double _s0, double _c_speed, double _c_d, double _c_d_d, double _c_d_dd, vector<vector<double>> _ob) {
+tuple<FrenetPath, vector<FrenetPath>> frenet_optimal_planning(ros::NodeHandle& _n, Spline2D _csp, double _s0, double _c_speed, double _c_d, double _c_d_d, double _c_d_dd, vector<vector<double>> _ob) {
     auto fplist = calc_frenet_paths(_c_speed, _c_d, _c_d_d, _c_d_dd, _s0);
-    fplist = calc_global_paths(_n, fplist, _csp);
-    fplist = check_paths(fplist, _ob);
-
-    cout << fplist.size() << endl;
+    auto fplist_all = calc_global_paths(_n, fplist, _csp);
+    fplist = check_paths(fplist_all, _ob);
 
     if(fplist.size() != 0) {
         FrenetPath best_path;
@@ -284,13 +250,13 @@ FrenetPath frenet_optimal_planning(ros::NodeHandle& _n, Spline2D _csp, double _s
             }
         }
 
-        return best_path;
+        return std::make_tuple(best_path, fplist_all);
     }
     else {
         FrenetPath empty_path;
         empty_path.s.push_back(-1);
         empty_path.d.push_back(-1.1);
-        return empty_path;
+        return std::make_tuple(empty_path, fplist_all);
     }
 }
 
