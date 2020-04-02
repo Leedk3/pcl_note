@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>frenet_c</name>
+  <name>pcl_example</name>
   <version>0.0.0</version>
-  <description>The frenet_c package</description>
+  <description>The pcl_example package</description>
 
   <maintainer email="lee.dk@kaist.ac.kr">usrg</maintainer>
   <license>TODO</license>
