@@ -1,8 +1,8 @@
-#PCL library note
-##transform
+# PCL library note
+## transform
 > transform pointcloud using Affine matrix
 
-##ICP
+## ICP
 > iterative closest point(ICP) matching 
 > Code is implemented with multi-thread
 
