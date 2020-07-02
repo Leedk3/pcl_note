@@ -21,6 +21,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(Boost REQUIRED COMPONENTS system)
+find_package(PCL REQUIRED QUIET)
+
 
 catkin_package(
   INCLUDE_DIRS include
@@ -30,34 +32,22 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
 
-#add_executable(${PROJECT_NAME}_node src/transform_node.cpp)
-add_executable(transform_node src/transform_node.cpp)
+add_executable(transform_example_node src/transform_node.cpp)
+add_dependencies(transform_example_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(transform_example_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
-add_dependencies(transform_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_executable(icp_example_node src/icp_node.cpp)
+add_dependencies(icp_example_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(icp_example_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
-target_link_libraries(transform_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
-
-#Hear start GTSAM , PCL, OpenCV dependancy
-
-#find_package(GTSAM REQUIRED QUIET)
-find_package(PCL REQUIRED QUIET)
-#find_package(OpenCV REQUIRED QUIET)
-
-include_directories(
-	include
-	${catkin_INCLUDE_DIRS}
-	${PCL_INCLUDE_DIRS}
-#	${OpenCV_INCLUDE_DIRS}
-#	${GTSAM_INCLUDE_DIR}
-)
 
 link_directories(
 	include
 	${OpenCV_LIBRARY_DIRS}
 	${PCL_LIBRARY_DIRS}
-#	${GTSAM_LIBRARY_DIRS}
 )
 
